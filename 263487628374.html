@@ -79,10 +79,7 @@ const announcer = document.getElementById('announcer');
 const sidebarContent = document.getElementById('sidebar-content');
 const menuOverlay = document.getElementById('menu-overlay');
 
-// ==========================================
-// 1. ROSTER & CHARACTER DEFINITIONS
-// ==========================================
-// We use a generalized hitbox and drawing system to support 12 distinct characters compactly.
+
 const ROSTER = {
     sword: {
         name: "Knight (Greatsword)",
@@ -211,9 +208,7 @@ const ROSTER = {
     }
 };
 
-// ==========================================
-// 2. PROCEDURAL DRAWING ENGINE
-// ==========================================
+
 function drawWeapon(ctx, r, len, w, color, type) {
     ctx.fillStyle = "#fff";
     
@@ -271,15 +266,13 @@ function drawWeapon(ctx, r, len, w, color, type) {
     }
 }
 
-// ==========================================
-// 3. UI AND STATE MANAGEMENT
-// ==========================================
+
 let GLOBAL_CFG = { grav: 0.6, bounce: 0.8, minEnergy: 12, maxV: 60, size: 60, mass: 40, bdmg: 5 };
 let p1Cfg = {}; let p2Cfg = {};
 let f1, f2;
 let matchActive = false;
 
-// Populate Dropdowns
+
 Object.keys(ROSTER).forEach(key => {
     let opt1 = document.createElement('option'); opt1.value = key; opt1.innerText = ROSTER[key].name;
     let opt2 = document.createElement('option'); opt2.value = key; opt2.innerText = ROSTER[key].name;
@@ -304,7 +297,7 @@ function createSlider(container, id, name, min, max, val, objRef) {
 function buildSidebar(p1Key, p2Key) {
     sidebarContent.innerHTML = ''; // Clear
 
-    // Global Panel
+    
     let gPanel = document.createElement('div'); gPanel.className = 'panel'; gPanel.innerHTML = '<h3>Global Arena Physics</h3>';
     createSlider(gPanel, 'grav', 'Gravity', 0, 3, GLOBAL_CFG.grav, GLOBAL_CFG);
     createSlider(gPanel, 'minEnergy', 'Min Bounce Energy', 5, 40, GLOBAL_CFG.minEnergy, GLOBAL_CFG);
@@ -312,14 +305,14 @@ function buildSidebar(p1Key, p2Key) {
     createSlider(gPanel, 'bdmg', 'Body-Bump Damage', 0, 20, GLOBAL_CFG.bdmg, GLOBAL_CFG);
     sidebarContent.appendChild(gPanel);
 
-    // Player 1 Panel
+    
     let p1Data = ROSTER[p1Key];
     let p1Panel = document.createElement('div'); p1Panel.className = 'panel p1-panel'; p1Panel.innerHTML = `<h3 style="color:#ff3366">${p1Data.name}</h3>`;
     createSlider(p1Panel, 'spin', 'Spin Speed', 0.05, 1.0, 0.3, p1Cfg);
     p1Data.customSliders.forEach(s => createSlider(p1Panel, s.id, s.name, s.min, s.max, s.val, p1Cfg));
     sidebarContent.appendChild(p1Panel);
 
-    // Player 2 Panel
+    
     let p2Data = ROSTER[p2Key];
     let p2Panel = document.createElement('div'); p2Panel.className = 'panel p2-panel'; p2Panel.innerHTML = `<h3 style="color:#00ccff">${p2Data.name}</h3>`;
     createSlider(p2Panel, 'spin', 'Spin Speed', 0.05, 1.0, 0.3, p2Cfg);
@@ -336,7 +329,7 @@ function startMatch() {
     let key1 = document.getElementById('sel-p1').value;
     let key2 = document.getElementById('sel-p2').value;
     
-    p1Cfg = {}; p2Cfg = {}; // Reset configs
+    p1Cfg = {}; p2Cfg = {}; 
     buildSidebar(key1, key2);
 
     f1 = new Fighter(200, 400, "#900", "#f36", key1, p1Cfg);
@@ -348,9 +341,6 @@ function startMatch() {
     matchActive = true;
 }
 
-// ==========================================
-// 4. PHYSICS & ENTITY ENGINE
-// ==========================================
 class Fighter {
     constructor(x, y, cDark, cLight, classKey, configObj) {
         this.x = x; this.y = y;
@@ -369,11 +359,11 @@ class Fighter {
         this.vy += GLOBAL_CFG.grav;
         this.x += this.vx; this.y += this.vy;
 
-        // Speed Cap
+        
         let speed = Math.sqrt(this.vx**2 + this.vy**2);
         if (speed > GLOBAL_CFG.maxV) { this.vx = (this.vx/speed)*GLOBAL_CFG.maxV; this.vy = (this.vy/speed)*GLOBAL_CFG.maxV; }
 
-        // THE KINETIC FLOOR NUDGE (Anti-Stuck Logic)
+       
         const r = GLOBAL_CFG.size;
         const b = GLOBAL_CFG.bounce;
         const minE = GLOBAL_CFG.minEnergy;
@@ -384,7 +374,6 @@ class Fighter {
         if (this.y < r) { this.y = r; this.vy = Math.max(Math.abs(this.vy)*b, minE); }
         if (this.y > canvas.height - r) { 
             this.y = canvas.height - r; 
-            // Crucial: Guarantee upward velocity never falls below minEnergy
             this.vy = -Math.max(Math.abs(this.vy)*b, minE); 
         }
 
@@ -394,18 +383,18 @@ class Fighter {
     draw() {
         const r = GLOBAL_CFG.size;
         
-        // Body
+        
         let grad = ctx.createRadialGradient(this.x - r/3, this.y - r/3, r/8, this.x, this.y, r);
         grad.addColorStop(0, this.cLight); grad.addColorStop(1, this.cDark);
         ctx.fillStyle = grad;
         ctx.beginPath(); ctx.arc(this.x, this.y, r, 0, Math.PI*2); ctx.fill();
         ctx.strokeStyle = "rgba(255,255,255,0.2)"; ctx.lineWidth = 3; ctx.stroke();
 
-        // HP
+        
         ctx.fillStyle = "#fff"; ctx.font = `bold ${r/2.5}px Arial`; ctx.textAlign = "center";
         ctx.fillText(Math.floor(this.hp), this.x, this.y + r/6);
 
-        // Weapon
+        
         ctx.save();
         ctx.translate(this.x, this.y);
         ctx.rotate(this.angle);
@@ -414,7 +403,7 @@ class Fighter {
     }
 }
 
-// Distance from point to line segment
+
 function distToSegment(px, py, x1, y1, x2, y2) {
     let l2 = (x2-x1)**2 + (y2-y1)**2;
     if (l2 == 0) return { d: Math.sqrt((px-x1)**2 + (py-y1)**2), cx: x1, cy: y1 };
@@ -426,7 +415,7 @@ function distToSegment(px, py, x1, y1, x2, y2) {
 function handleCollisions() {
     const r = GLOBAL_CFG.size;
     
-    // Body vs Body
+    
     let dx = f2.x - f1.x; let dy = f2.y - f1.y;
     let dist = Math.sqrt(dx*dx + dy*dy);
     if (dist < r * 2) {
@@ -443,7 +432,7 @@ function handleCollisions() {
         if(f2.cfg.heal) f2.hp += f2.cfg.heal;
     }
 
-    // Weapon vs Body Checks
+    
     function resolveWeapon(attacker, defender) {
         let boxes = attacker.data.hitboxes(attacker.cfg, r);
         let hit = false;
@@ -472,7 +461,7 @@ function handleCollisions() {
                 }
             }
         }
-        if(hit) attacker.spinDir *= -1; // Bounce weapon
+        if(hit) attacker.spinDir *= -1; 
     }
 
     function triggerImpact(att, def, ix, iy, boxProps) {
@@ -493,7 +482,7 @@ function run() {
     ctx.fillStyle = "#0a0a0d"; 
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // Grid
+    
     ctx.strokeStyle = "#1a1a24"; ctx.lineWidth = 2;
     for(let i=0; i<canvas.width; i+=60) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke(); }
     for(let i=0; i<canvas.height; i+=60) { ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke(); }
@@ -503,10 +492,10 @@ function run() {
         f1.update(); f1.draw();
         f2.update(); f2.draw();
 
-        // Caps
+        
         if(f1.hp > 250) f1.hp = 250; if(f2.hp > 250) f2.hp = 250;
 
-        // Win Condition
+      
         if ((f1.hp <= 0 || f2.hp <= 0) && matchActive) {
             matchActive = false;
             let p1Wins = f1.hp > 0;
@@ -518,7 +507,7 @@ function run() {
     requestAnimationFrame(run);
 }
 
-run(); // Start render loop
+run();
 </script>
 </body>
 </html>
